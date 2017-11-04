@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title></title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" />
+	<link rel="stylesheet" href="css/leaflet-search.css" />
+	<link rel="stylesheet" href="css/leaflet-search.mobile.css" />
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="map"></div>
+<div>
+	<label for="">纬度：</label>
+	<input type="" name="" id="mapLat" value="" readonly="readonly"/>
+</div>
+<div>
+	<label for="">经度：</label>
+	<input type="" name="" id="mapLng" value="" readonly="readonly"/>
+</div>
+<div id="">
+	<label for="">缩放级别：</label>
+	<select name="" id="zoom">
+		
+	</select>
+</div>
+
+
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"></script>
+<script src="js/leaflet-search.js"></script>
+<script>
+    
+    
+    var mapLat = document.getElementById("mapLat");
+    var mapLng = document.getElementById("mapLng");
+    var mapZoom = document.getElementById("zoom");
+    
+    var select = "";
+    for(var i=0; i<19; i++){
+    	select += "<option value="+i+">"+i+"</option>"
+    }
+    $(mapZoom).append(select)
+    
+    mapZoom.onchange = function(){
+    	var val = this.value;
+    	map.setZoom(val)
+    }
+    
+	var map = new L.Map('map', {zoom: 12, center: new L.latLng([36.3805903,111.7249225]),zoomControl: false });
+	map.addLayer(new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'));	//base layer
+					
+	function formatJSON(rawjson) {	//callback that remap fields name
+
+		var json = {},
+			key, loc, disp = [];
+			
+		for(var i in rawjson)
+		{	
+			disp = rawjson[i].display_name.split(',');	
+
+			key = disp[0] +', '+ disp[1];
+			
+			loc = L.latLng( rawjson[i].lat, rawjson[i].lon );
+			
+			json[ key ]= loc;	//key,value format
+		}
+		
+		if(isClickMap){
+			triggleLi();
+			isClickMap = false;
+		}
+				
+		return json;
+		
+	}
+	
+	//触发li的点击事件
+	function triggleLi(){
+		clearInterval(t);
+		var t = setInterval(function(){
+			var li = document.querySelector(".leaflet-control-search .search-tip");
+			if(li != null){
+				clearInterval(t);
+				li.click();
+			}
+		},100);
+	}
+	
+	var mobileOpts = {
+		url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
+		jsonpParam: 'json_callback',
+		formatData: formatJSON,		
+		textPlaceholder: 'Color...',
+		autoType: false,
+		tipAutoSubmit: true,
+		autoCollapse: false,
+		autoCollapseTime: 20000,
+		delayType: 800,	//with mobile device typing is more slow
+		marker: {
+			icon: true
+		}		
+	};
+	
+	
+	var placeHolder = new L.Control.Search(mobileOpts);
+	
+	placeHolder.on("search:locationfound",function(e){
+		setTimeout(setTip,1000);
+		function setTip(){
+			var marker = e.target._markerSearch;
+			var str = "<div class='tipPan'>";
+				str += "<p class='lat'>lat:"+ marker._latlng.lat +"</p>";
+				str += "<p class='lon'>lng:"+ marker._latlng.lng +"</p>";
+				str += "</div>";
+			mapLat.value = marker._latlng.lat;
+			mapLng.value = marker._latlng.lng;
+			marker.bindPopup(str).openPopup();	
+		}
+		
+	})
+	
+	placeHolder.on("search:expanded",function(e){
+		console.log("搜索条出现")
+	})
+	
+	placeHolder.on("search:collapsed",function(e){
+		console.log("搜索条消失")
+	})
+	
+	//判断是否点击过
+	var isClickMap = false;
+	map.on("click",function(e){
+		isClickMap = true;
+		var str = e.latlng.lat+","+e.latlng.lng;
+		placeHolder.searchText(str)
+	})
+	
+	map.on("zoomstart",function(){
+		mapZoom.value = map.getZoom();
+	})
+	
+	map.addControl( placeHolder );
+	map.addControl(new L.Control.Zoom());
+
+</script>
+</body>
+</html>
