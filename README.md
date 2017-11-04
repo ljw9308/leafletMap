@@ -2,6 +2,7 @@
 ## leafletMap
 leaflet   国外地图
 ## 地图基本的显示和smarker标注图标
+[https://mysucceed.github.io/gooleMap/gooleMap/memu.html](https://mysucceed.github.io/gooleMap/gooleMap/memu.html)
 ![](https://github.com/mysucceed/leafletMap/blob/master/img/baseMap.png) 
 ## 输入提示
     点击搜索开始搜索内容或者点击地图获取相应的点的位置信息
